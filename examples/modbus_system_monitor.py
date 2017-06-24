@@ -13,6 +13,8 @@
 
 """
 
+from __future__ import print_function
+
 import time
 
 from modbus_tk import defines
@@ -41,7 +43,7 @@ class SystemDataCollector(object):
                 from win32com.client import GetObject
                 wmi = GetObject('winmgmts:')
                 cpu = wmi.InstancesOf('Win32_Processor')
-                for (_cpu, i) in zip(cpu, xrange(10)):
+                for (_cpu, i) in zip(cpu, range(10)):
                     value = _cpu.Properties_('LoadPercentage').Value
                     cpu_usage = int(str(value)) if value else 0
 
@@ -75,7 +77,7 @@ def main():
         simu.start()
 
     except Exception as excpt:
-        print excpt
+        print(excpt)
 
     finally:
         #close the simulator

@@ -40,4 +40,7 @@ setup(
     license='LGPL',
     packages=['modbus_tk'],
     platforms=["Linux", "Mac OS X", "Win"],
+    install_requires=[
+        'pyserial>=3.1',
+    ],
 )

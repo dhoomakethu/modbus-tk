@@ -16,10 +16,14 @@ import struct
 import sys
 import threading
 import unittest
-import Queue
 
 import modbus_tk
 from modbus_tk import modbus_rtu, hooks, utils
+
+if utils.PY2:
+    import Queue as queue
+elif utils.PY3:
+    import queue
 
 from functest_modbus import TestQueries, TestQueriesSetupAndTeardown, SharedDataTest
 
@@ -76,7 +80,7 @@ class TestConnection(TestQueriesSetupAndTeardown, unittest.TestCase):
         slave.add_block("myblock", modbus_tk.defines.HOLDING_REGISTERS, 500, 100)
         slave.set_values("myblock", 500, range(100))
         
-        for x in xrange(5):
+        for x in range(5):
             self.master.close()
             time.sleep(1.0)
             self.master.open()
@@ -90,7 +94,7 @@ class TestConnection(TestQueriesSetupAndTeardown, unittest.TestCase):
         slave.add_block("myblock", modbus_tk.defines.HOLDING_REGISTERS, 500, 100)
         slave.set_values("myblock", 500, range(100))
         
-        for x in xrange(5):
+        for x in range(5):
             self.server.stop()
             time.sleep(1.0)
             self.server.start()
@@ -153,7 +157,7 @@ class TestRtuSpecific(TestQueriesSetupAndTeardown, unittest.TestCase):
         try:
             self.master._send(bad_query)
             self.master._recv()
-        except modbus_tk.modbus.ModbusError, ex:
+        except modbus_tk.modbus.ModbusError as ex:
             self.assertEqual(ex.get_exception_code(), 1)
             return
 
@@ -172,7 +176,7 @@ class TestRtuSpecific(TestQueriesSetupAndTeardown, unittest.TestCase):
 
         slaves = [self.server.add_slave(11), self.server.add_slave(12)]
 
-        q = Queue.Queue()
+        q = queue.Queue()
 
         for s in slaves:
             s.add_block("a", modbus_tk.defines.HOLDING_REGISTERS, 0, 100)
@@ -180,17 +184,17 @@ class TestRtuSpecific(TestQueriesSetupAndTeardown, unittest.TestCase):
         def set_val(self_, slaves, q):
             try:
                 id = 11
-                for i in xrange(5):
+                for i in range(5):
                     for s in slaves:
                         s.set_values("a", 0, [i]*100)
                         result = self_.master.execute(id, modbus_tk.defines.READ_HOLDING_REGISTERS, 0, 100)
                         id += 1
                         if id > 12: id = 11
-            except Exception, msg:
+            except Exception as msg:
                 LOGGER.error(msg)
                 q.put(1)
         
-        threads = [threading.Thread(target=set_val, args=(self, slaves, q)) for i in xrange(3)]
+        threads = [threading.Thread(target=set_val, args=(self, slaves, q)) for i in range(3)]
         for t in threads:
             t.start()
         LOGGER.debug("all threads have been started")

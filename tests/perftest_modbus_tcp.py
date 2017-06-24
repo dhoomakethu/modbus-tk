@@ -17,9 +17,13 @@ import struct
 import logging
 import socket
 import modbus_tk.utils as utils
-import Queue
 import time
 import sys
+
+if utils.PY2:
+    import Queue as queue
+elif utils.PY3:
+    import queue
 
 LOGGER = modbus_tk.utils.create_logger()
 
@@ -62,7 +66,7 @@ class TestStress(unittest.TestCase):
 
         slave = self.server.add_slave(1)
 
-        q = Queue.Queue()
+        q = queue.Queue()
 
         slave.add_block("a", modbus_tk.defines.HOLDING_REGISTERS, 0, 100)
         slave.set_values("a", 0, range(100))
@@ -72,12 +76,12 @@ class TestStress(unittest.TestCase):
         
         def read_vals(master):
             try:
-                for i in xrange(100):
+                for i in range(100):
                     result = master.execute(1, modbus_tk.defines.READ_HOLDING_REGISTERS, 0, 100)
                     if result != tuple(range(100)):
                         q.put(1)
                     time.sleep(0.1)
-            except Exception, msg:
+            except Exception as msg:
                 LOGGER.error(msg)
                 q.put(1)
         

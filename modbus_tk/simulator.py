@@ -11,6 +11,7 @@
  The modbus_tk simulator is a console application which is running a server with TCP and RTU communication
  It is possible to interact with the server from the command line or from a RPC (Remote Process Call)
 """
+from __future__ import print_function
 
 import ctypes
 import os
@@ -19,8 +20,6 @@ import select
 import serial
 import threading
 import time
-import Queue
-import SocketServer
 
 import modbus_tk
 from modbus_tk import hooks
@@ -28,18 +27,24 @@ from modbus_tk import modbus
 from modbus_tk import modbus_tcp
 from modbus_tk import modbus_rtu
 
+if modbus_tk.utils.PY2:
+    import Queue as queue
+    import SocketServer
+else:
+    import queue
+    import socketserver as SocketServer
 
-#add logging capability
+
+# add logging capability
 LOGGER = modbus_tk.utils.create_logger(name="console", record_format="%(message)s")
 
-#The communication between the server and the user interfaces (console or rpc)
-#are done through queues
+# The communication between the server and the user interfaces (console or rpc) are done through queues
 
-#command received from the interfaces
-INPUT_QUEUE = Queue.Queue()
+# command received from the interfaces
+INPUT_QUEUE = queue.Queue()
 
-#response to be sent back by the interfaces
-OUTPUT_QUEUE = Queue.Queue()
+# response to be sent back by the interfaces
+OUTPUT_QUEUE = queue.Queue()
 
 
 class CompositeServer(modbus.Server):
@@ -129,8 +134,8 @@ class ConsoleInterface(threading.Thread):
             self.console_handle = ctypes.windll.Kernel32.GetStdHandle(ctypes.c_ulong(0xfffffff5))
             ctypes.windll.Kernel32.WaitForSingleObject.restype = ctypes.c_ulong
 
-        if os.name == "posix":
-            #select already imported
+        elif os.name == "posix":
+            # select already imported
             pass
 
         else:
@@ -329,7 +334,7 @@ class Simulator(object):
             if cmd.find('quit') == 0:
                 self.outq.put('bye-bye\r\n')
                 break
-            elif self.cmds.has_key(args[0]):
+            elif args[0] in self.cmds:
                 try:
                     answer = self.cmds[args[0]](args)
                     self.outq.put("%s done: %s\r\n" % (args[0], answer))
@@ -348,7 +353,7 @@ class Simulator(object):
 def print_me(args):
     """hook function example"""
     request = args[1]
-    print "print_me: len = ", len(request)
+    print("print_me: len = ", len(request))
 
 
 def run_simulator():
@@ -362,13 +367,13 @@ def run_simulator():
         simulator.start()
 
     except Exception as exception:
-        print exception
+        print(exception)
 
     finally:
         simulator.close()
         LOGGER.info("modbus_tk.simulator has stopped!")
-        #In python 2.5, the SocketServer shutdown is not working Ok
-        #The 2 lines below are an ugly temporary workaround
+        # In python 2.5, the SocketServer shutdown is not working Ok
+        # The 2 lines below are an ugly temporary workaround
         time.sleep(1.0)
         sys.exit()
 
